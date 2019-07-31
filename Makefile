@@ -33,7 +33,7 @@ build:
 		-ldflags "$(shell hack/version-ld-flags.sh)"
 
 image:
-	docker build --build-arg VCS_REF=$(shell git rev-parse HEAD) -t $(DOCKER_IMAGE):$(BUILD_TAG) .
+	docker build -t $(DOCKER_IMAGE):$(BUILD_TAG) .
 
 push: image
 	docker tag $(DOCKER_IMAGE):$(BUILD_TAG) $(DOCKER_IMAGE):${TAG}

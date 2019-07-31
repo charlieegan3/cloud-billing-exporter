@@ -1,21 +1,12 @@
-FROM alpine:3.9
+FROM golang:1.10 as build
 
-# install ca certificates for comms with Let's Encrypt
-RUN apk --update add ca-certificates && rm -rf /var/cache/apk/*
+WORKDIR /go/src/github.com/charlieegan3/cloud-billing-exporter
 
-# add user / group
-RUN addgroup -g 1000 app && \
-    adduser -G app -h /home/app -u 1000 -D app
+COPY . .
 
-# move to user / group
-USER app
-WORKDIR /home/app
+RUN CGO_ENABLED=0 go build -o /cloud-billing-exporter
 
-EXPOSE 9660
+FROM gcr.io/distroless/base
+COPY --from=build /cloud-billing-exporter /
 
-COPY _build/cloud-billing-exporter-linux-amd64 /cloud-billing-exporter
-ENTRYPOINT ["/cloud-billing-exporter"]
-ARG VCS_REF
-LABEL org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/charlieegan3/cloud-billing-exporter" \
-      org.label-schema.license="Apache-2.0"
+CMD ["/cloud-billing-exporter"]

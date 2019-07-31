@@ -235,6 +235,7 @@ func (g *GCPBilling) GetReports(ctx context.Context) error {
 
 	// if we have a path to find a short lived access token, use that
 	if os.Getenv("GOOGLE_ACCESS_TOKEN_PATH") != "" {
+		log.Info("Using GOOGLE_ACCESS_TOKEN_PATH")
 		file, err := os.Open(os.Getenv("GOOGLE_ACCESS_TOKEN_PATH"))
 		if err != nil {
 			log.Fatal(err)
