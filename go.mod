@@ -1,4 +1,4 @@
-module github.com/simonswine/cloud-billing-exporter
+module github.com/charlieegan3/cloud-billing-exporter
 
 go 1.12
 

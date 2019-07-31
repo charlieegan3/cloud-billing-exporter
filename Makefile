@@ -1,4 +1,4 @@
-ACCOUNT=simonswine
+ACCOUNT=charlieegan3
 APP_NAME=cloud-billing-exporter
 
 PACKAGE_NAME=github.com/${ACCOUNT}/${APP_NAME}
@@ -34,7 +34,7 @@ build:
 
 image:
 	docker build --build-arg VCS_REF=$(shell git rev-parse HEAD) -t $(DOCKER_IMAGE):$(BUILD_TAG) .
-	
+
 push: image
 	set -e; \
 	for tag in $(IMAGE_TAGS); do \
