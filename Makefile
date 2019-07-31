@@ -15,7 +15,7 @@ TEST_DIR=_test
 CONTAINER_DIR=/go/src/${PACKAGE_NAME}
 
 BUILD_TAG := build
-IMAGE_TAGS := canary
+TAG := $(shell tar -cf - . | md5sum | cut -f 1 -d " ")
 
 PACKAGES=$(shell find . -name "*_test.go" | xargs -n1 dirname | grep -v 'vendor/' | sort -u | xargs -n1 printf "%s.test_pkg ")
 
@@ -36,8 +36,5 @@ image:
 	docker build --build-arg VCS_REF=$(shell git rev-parse HEAD) -t $(DOCKER_IMAGE):$(BUILD_TAG) .
 
 push: image
-	set -e; \
-	for tag in $(IMAGE_TAGS); do \
-		docker tag  $(DOCKER_IMAGE):$(BUILD_TAG) $(DOCKER_IMAGE):$${tag} ; \
-		docker push $(DOCKER_IMAGE):$${tag}; \
-	done
+	docker tag $(DOCKER_IMAGE):$(BUILD_TAG) $(DOCKER_IMAGE):${TAG}
+	docker push $(DOCKER_IMAGE):${TAG}
