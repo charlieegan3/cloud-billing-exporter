@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/procfs v0.0.0-20190306233201-d0f344d83b0c // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 // indirect
 	golang.org/x/net v0.0.0-20190311031020-56fb01167e7d
-	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
+	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	golang.org/x/sys v0.0.0-20190310054646-10058d7d4faa // indirect
 	google.golang.org/api v0.0.0-20190305202223-1949198e2e5a
 	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19 // indirect

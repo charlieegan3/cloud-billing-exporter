@@ -3,6 +3,9 @@ package gcp
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,12 +16,18 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
+// DateFormat is the format to use for dates in the application
 const DateFormat = "2006-01-02"
+
+// ReportsPerMonth is the number of reports generated in a whole month
 const ReportsPerMonth = 32
 
+// Clock is an interface... TODO
 type Clock interface {
 	Now() time.Time
 }
@@ -54,6 +63,7 @@ type gcpBillingReport struct {
 	Hash     []byte
 }
 
+// GCPBilling holds GCPBilling export config
 type GCPBilling struct {
 	time         Clock
 	BucketName   string
@@ -67,6 +77,7 @@ type GCPBilling struct {
 	metricValues       map[string]float64
 }
 
+// NewGCPBilling creates a new GCPBilling config
 func NewGCPBilling(metric *prometheus.CounterVec, bucketName, reportPrefix string) *GCPBilling {
 	return &GCPBilling{
 		MetricMonthlyCosts: metric,
@@ -219,11 +230,41 @@ func (g *GCPBilling) getReportFile(ctx context.Context, bucket *storage.BucketHa
 }
 
 func (g *GCPBilling) GetReports(ctx context.Context) error {
+	var client *storage.Client
+	var err error
 
-	// create a GCS client.
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create client: %v", err)
+	// if we have a path to find a short lived access token, use that
+	if os.Getenv("GOOGLE_ACCESS_TOKEN_PATH") != "" {
+		file, err := os.Open(os.Getenv("GOOGLE_ACCESS_TOKEN_PATH"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		b, err := ioutil.ReadAll(file)
+		if err != nil {
+			return fmt.Errorf("Failed to read file %s", err)
+		}
+		var token oauth2.Token
+		if err := json.Unmarshal(b, &token); err != nil {
+			return fmt.Errorf("Failed to load token from file")
+		}
+
+		ctx = context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{})
+		oauthConfig := &oauth2.Config{}
+		httpClient := oauthConfig.Client(ctx, &token)
+
+		client, err = storage.NewClient(ctx, option.WithHTTPClient(httpClient))
+		if err != nil {
+			return fmt.Errorf("failed to create client: %v", err)
+		}
+	} else {
+		// otherwise use the application default credentials
+		log.Info("Using application default credentials")
+		client, err = storage.NewClient(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create client: %v", err)
+		}
 	}
 
 	bucket := client.Bucket(g.BucketName)
